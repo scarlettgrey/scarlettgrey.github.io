@@ -21,7 +21,8 @@
         }
 
         function successLoc(pos){
-            coord = pos.coords;
+            coord = pos.coords
+            window.open('https://www.google.com/maps/search/nearest+hospital+for+' + dis + '/@' + coord.latitude + ',' + coord.longitude);
         }
 
         function SearchHospital(){
@@ -32,8 +33,6 @@
             else{
                 alert("Geolocation not supported by this browser you cant search using Search now! button")
             }
-            window.open('https://www.google.com/maps/search/nearest+hospital+for+' + dis + '/@' + coord.latitude + ',' + coord.longitude);
-
         }
 
         function symptomChecker(j){
