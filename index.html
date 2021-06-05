@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        const MODEL_URL = 'http://127.0.0.1:5500/Website/modeljs/model.json';
+        const MODEL_URL = 'https://github.com/scarlettgrey/scarlettgrey.github.io/blob/main/modeljs/model.json';
         const model = tf.loadLayersModel(MODEL_URL);
         var symptomIndex = []
         var symptomName = []
@@ -99,7 +99,7 @@
         }
         async function run(){
             var label = [];
-            const Label = 'http://127.0.0.1:5500/Website/Data/label.txt';
+            const Label = 'https://github.com/scarlettgrey/scarlettgrey.github.io/blob/main/Data/label.txt';
             await fetch(Label).then(f => f.text())
             .then(t => {
                 const templ = t.split('\n')
@@ -107,7 +107,7 @@
                     label.push(templ[a].replace('\r','').split(',')[0]);
                 }
             })
-            const d = 'http://127.0.0.1:5500/Website/Data/disease.txt';
+            const d = 'https://github.com/scarlettgrey/scarlettgrey.github.io/blob/main/Data/disease.txt';
             await fetch(d).then(f => f.text())
             .then(t => {
                 const tempd = t.split('\n')
