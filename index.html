@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src='./script/index.js'></script>
+    <link rel="stylesheet" href="./css/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"> </script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const MODEL_URL = 'http://127.0.0.1:5500/Website/modeljs/model.json';
+        const model = tf.loadLayersModel(MODEL_URL);
+        var symptomIndex = []
+        var symptomName = []
+        var sendData = [];
+        var disease = [];
+        var coord;
+
+        function failLoc(){
+            alert("Failed to get your location")
+        }
+
+        function successLoc(pos){
+            coord = pos.coords;
+        }
+
+        async function SearchHospital(){
+            dis = document.getElementById('predictedDisease').innerHTML;
+            if(navigator.geolocation){
+                await navigator.geolocation.getCurrentPosition(successLoc, failLoc)
+            }
+            else{
+                alert("Geolocation not supported by this browser you cant search using Search now! button")
+            }
+            window.open('https://www.google.com/maps/search/nearest+hospital+for+' + dis + '/@' + coord.latitude + ',' + coord.longitude);
+
+        }
+
+        function symptomChecker(j){
+            // Check for double data
+            for(let a = 0; a < symptomName.length; a++){
+                if(symptomName[a] == j) return a
+            }
+            return -1
+        }
+
+        function getSymptoms(){
+            var SelectedSymptom = document.getElementById('symptoms');
+            var i = SelectedSymptom.selectedIndex;
+            var j = SelectedSymptom.options[i].text;
+            if(symptomChecker(j) == -1){
+                symptomIndex.push(i);
+                symptomName.push(j);
+                document.getElementById('ListOfSymptoms').innerHTML += '<div class=\'selectedSymptoms\' id=\'symptoms' + i + '\'><div>' + j + '</div><button class=\'clearButton\' id=\'' + i + '\' onclick=\'clearSelectedSymptoms(this.id)\'>Clear</button></div>';
+            }
+            
+        }
+
+        function clearSelectedSymptoms(id){
+            var preRemove = document.getElementById('ListOfSymptoms');
+            preRemove.removeChild(document.getElementById("symptoms" + id));
+            for(let i = 0; i < symptomIndex.length; i++){
+                if(symptomIndex[i] == id){
+                    symptomIndex.splice(i, 1);
+                    symptomName.splice(i, 1)
+                }
+            }
+            document.getElementById('selectedSymptoms').innerHTML = '';
+            symptomName.forEach(e =>{
+                document.getElementById('selectedSymptoms').innerHTML += e + '<br>';
+            });
+        }
+
+        async function predictData(){
+            for(let a = 0; a < 132; a++){
+                sendData[a] = 0;
+            }
+            symptomIndex.forEach(e => {
+                sendData[e] = 1;
+            })
+            var input = tf.tensor2d(sendData, [1, 132]);
+            var result = [];
+            await model.then(function(res){
+                const predict = res.predict(input);
+                result.push(predict.arraySync()[0])
+            })
+            var max = -99
+            var idx = -1
+            for(let a = 0; a < result[0].length; a++){
+                if(result[0][a] > max){
+                    max = result[0][a]
+                    idx = a
+                }
+            }
+            console.log(result[0])
+            console.log(idx)
+            console.log(disease[idx])
+            document.getElementById('predictedDisease').innerHTML = disease[idx]
+        }
+        async function run(){
+            var label = [];
+            const Label = 'http://127.0.0.1:5500/Website/Data/label.txt';
+            await fetch(Label).then(f => f.text())
+            .then(t => {
+                const templ = t.split('\n')
+                for(let a = 0; a < templ.length; a++){
+                    label.push(templ[a].replace('\r','').split(',')[0]);
+                }
+            })
+            const d = 'http://127.0.0.1:5500/Website/Data/disease.txt';
+            await fetch(d).then(f => f.text())
+            .then(t => {
+                const tempd = t.split('\n')
+                for(let a = 0; a < tempd.length; a++){
+                    disease.push(tempd[a].replace('\r','').split(',')[1])
+                }
+            })
+            console.log(disease)
+            var x = document.getElementById('symptoms');
+            for(let a = 1; a < label.length; a++){
+                var opt = document.createElement('option')
+                opt.text = label[a]
+                opt.value = a
+                x.add(opt, a)
+            }
+        }
+        run()
+    </script>
+    <title>Get Your Hospital</title>
+</head>
+<body>
+    <label for='symptoms'> Select your symptoms </label><br>
+    <select name="symptoms" id="symptoms" onchange='getSymptoms()'>
+        
+    </select>
+    <div id='ListOfSymptoms'>
+            
+    </div>
+    <button id='sendData' onclick="predictData()">Predict</button>
+    <div id='predictedDisease'>
+        
+    </div>
+    <button id="SearchHospital" onclick="SearchHospital()">
+        Search Now!
+    </button>
+</body>
+</html>
